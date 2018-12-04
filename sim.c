@@ -20,6 +20,7 @@ uint32_t mask(uint32_t x, uint32_t y){
 void special(uint32_t instruction, uint32_t convert){
   uint32_t temp = mask(0, 5);
   uint32_t instrName = temp & instruction;
+  uint32_t sa, rd, rt, rs, lowOrder;
   switch(instrName){
   case 24: //SYSCALL
     if (CURRENT_STATE.REGS[2] == 10){
@@ -27,6 +28,124 @@ void special(uint32_t instruction, uint32_t convert){
     }
     else
       NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+    break; 
+  case 0:
+    temp = mask(6, 10);
+    sa = temp & instruction;
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction; 
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] << sa;
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+    break;
+  case 2:
+    temp = mask(6, 10);
+    sa = temp & instruction;
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction; 
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] >> sa;
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+    break;
+  case 3:
+    temp = mask(6, 10);
+    sa = temp & instruction;
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction; 
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] >> sa;
+    NEXT_STATE.REGS[rd] = (int32_t)CURRENT_STATE.REGS[rd]; // sign extends the high-order bits
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+    break;
+  case 4:
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction;
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    temp = mask(0, 4);
+    lowOrder = temp & CURRENT_STATE.REGS[rs];
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] << lowOrder; // shifted left by the low-order 5 bits in rs
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+    break;
+  case 6:
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction;
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    temp = mask(0, 4);
+    lowOrder = temp & CURRENT_STATE.REGS[rs];
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] >> lowOrder; // shifted right by the low-order 5 bits rs
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+    break;
+  case 7:
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction;
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    temp = mask(0, 4);
+    lowOrder = temp & CURRENT_STATE.REGS[rs];
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] >> lowOrder; // shifted left by the low-order 5 bits in rs
+    NEXT_STATE.REGS[rd] = (int32_t)CURRENT_STATE.REGS[rd]; // sign extends the high order bits
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4; 
+    break;
+  case 8:// JR
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
+    break;
+  case 9:
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    NEXT_STATE.PC = CURRENT_STATE.REGS[rs];
+    NEXT_STATE.REGS[31] = CURRENT_STATE.PC + 4;
+    break;
+  case 32: // ADD
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction;
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] + CURRENT_STATE.REGS[rs];
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+    break;
+  case 33: // ADDU, no different than ADD, since exceptions are not cared about in this project.
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction;
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rt] + CURRENT_STATE.REGS[rs];
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+  case 34: // SUB
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction;
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
+    break;
+  case 35: //SUBU
+    temp = mask(11, 15);
+    rd = temp & instruction;
+    temp = mask(16, 20);
+    rt = temp & instruction;
+    temp = mask(21, 25);
+    rs = temp & instruction;
+    NEXT_STATE.REGS[rd] = CURRENT_STATE.REGS[rs] - CURRENT_STATE.REGS[rt];
+    NEXT_STATE.PC = CURRENT_STATE.PC + 4;
     break; 
   }
   return;
